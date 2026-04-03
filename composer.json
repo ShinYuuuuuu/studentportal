@@ -1,5 +1,4 @@
 {
-    "name": "student-portal",
     "description": "Simple Student Portal System",
     "type": "project",
     "require": {
