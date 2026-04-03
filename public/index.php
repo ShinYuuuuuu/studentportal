@@ -19,8 +19,8 @@ if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['user'] = [
             'id' => 1,
             'student_id' => '2023-00123',
-            'first_name' => 'Reynante',
-            'last_name' => 'Dela Cruz',
+            'first_name' => 'Classic',
+            'last_name' => 'John Doe',
             'program' => 'BS Computer Science',
             'year_level' => '3rd Year',
             'section' => 'CS-3A'
