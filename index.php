@@ -226,6 +226,7 @@ if (!$loggedIn && $page !== 'login') {
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); }
         .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav-link { color: var(--dark) !important; }
         .nav-link.active { color: var(--primary) !important; font-weight: 600; }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .card:hover { transform: translateY(-2px); }
@@ -326,12 +327,12 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'dashboard'): ?>
     <!-- Dashboard -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
-                <div>
+                <div class="text-white">
                     <h2>Good morning, <?= $user['first_name'] ?> 👋</h2>
-                    <p class="mb-0 opacity-75"><?= $user['program'] ?> • <?= $user['year_level'] ?> • <?= $user['section'] ?></p>
+                    <p class="mb-0" style="opacity:0.75"><?= $user['program'] ?> • <?= $user['year_level'] ?> • <?= $user['section'] ?></p>
                 </div>
                 <div class="badge bg-white text-primary fs-6">ID: <?= $user['student_id'] ?></div>
             </div>
@@ -435,12 +436,12 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'grades'): ?>
     <!-- Grades -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
         <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center text-white">
                 <div>
                     <h2>My Grades</h2>
-                    <p class="mb-0 opacity-75">2nd Semester AY 2023-2024</p>
+                    <p class="mb-0" style="opacity:0.75">2nd Semester AY 2023-2024</p>
                 </div>
                 <div class="text-end">
                     <h1 class="display-4 fw-bold">1.85</h1>
@@ -492,10 +493,10 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'schedule'): ?>
     <!-- Schedule -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
-        <div class="card-body p-4">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+        <div class="card-body p-4 text-white">
             <h2>My Schedule</h2>
-            <p class="mb-0 opacity-75">2nd Semester AY 2023-2024</p>
+            <p class="mb-0" style="opacity:0.75">2nd Semester AY 2023-2024</p>
         </div>
     </div>
     
@@ -551,10 +552,10 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'enrollment'): ?>
     <!-- Enrollment -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">
-        <div class="card-body p-4">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+        <div class="card-body p-4 text-white">
             <h2>Enrollment</h2>
-            <p class="mb-0 opacity-75">2nd Semester AY 2023-2024</p>
+            <p class="mb-0" style="opacity:0.75">2nd Semester AY 2023-2024</p>
         </div>
     </div>
     
@@ -598,10 +599,10 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'services'): ?>
     <!-- Services -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #f59e0b, #ec4899);">
-        <div class="card-body p-4">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+        <div class="card-body p-4 text-white">
             <h2>Online Services</h2>
-            <p class="mb-0 opacity-75">Request documents, pay fees, and more</p>
+            <p class="mb-0" style="opacity:0.75">Request documents, pay fees, and more</p>
         </div>
     </div>
     
@@ -635,10 +636,10 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'downloads'): ?>
     <!-- Downloads -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
-        <div class="card-body p-4">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+        <div class="card-body p-4 text-white">
             <h2>Downloads</h2>
-            <p class="mb-0 opacity-75">Forms, documents, and resources</p>
+            <p class="mb-0" style="opacity:0.75">Forms, documents, and resources</p>
         </div>
     </div>
     
@@ -677,15 +678,15 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'profile'): ?>
     <!-- Profile -->
-    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
+    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
         <div class="card-body p-4">
             <div class="d-flex align-items-center">
                 <div class="rounded-circle bg-white p-3 me-4">
                     <i class="bi bi-person-circle fs-1 text-primary"></i>
                 </div>
-                <div>
+                <div class="text-white">
                     <h2><?= $user['first_name'] ?> <?= $user['last_name'] ?></h2>
-                    <p class="mb-0 opacity-75"><?= $user['program'] ?></p>
+                    <p class="mb-0" style="opacity:0.75"><?= $user['program'] ?></p>
                 </div>
             </div>
         </div>

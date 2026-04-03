@@ -1,7 +1,13 @@
 RewriteEngine On
+RewriteBase /
+
+# Handle root URL
+RewriteRule ^$ index.php?page=dashboard [L,QSA]
+
+# Handle all other URLs
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.+)$ index.php?page=$1 [QSA,L]
+RewriteRule ^(.+)$ index.php?page=$1 [L,QSA]
 
 # Security Headers
 Header set X-Content-Type-Options "nosniff"
