@@ -34,7 +34,7 @@ try {
     echo "<p style='color: green;'>✅ Database connection successful!</p>";
 
     // Read the schema file
-    $schemaFile = 'database/schema.sql';
+    $schemaFile = '../database/schema.sql';
 
     if (!file_exists($schemaFile)) {
         echo "<p style='color: red;'>❌ ERROR: schema.sql file not found!</p>";
