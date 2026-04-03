@@ -40,7 +40,13 @@ $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
 // Initialize database connection for logged-in users
 $db = null;
 if ($loggedIn) {
-    $db = getDB();
+    try {
+        $db = getDB();
+    } catch (Exception $e) {
+        // For debugging - remove this in production
+        error_log("Database connection error: " . $e->getMessage());
+        die("Database connection failed. Please check your database configuration.");
+    }
 }
 
 // Handle login
@@ -328,15 +334,21 @@ if (!$loggedIn && $page !== 'login') {
     
     <div class="row">
         <?php
-        $stmt = $db->prepare("
-            SELECT g.*, c.course_name as subject, c.course_code as code, c.units
-            FROM grades g
-            JOIN courses c ON g.course_id = c.id
-            WHERE g.student_id = ?
-            ORDER BY g.created_at DESC
-        ");
-        $stmt->execute([$user['id']]);
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+        if ($db) {
+            $stmt = $db->prepare("
+                SELECT g.*, c.course_name as subject, c.course_code as code, c.units
+                FROM grades g
+                JOIN courses c ON g.course_id = c.id
+                WHERE g.student_id = ?
+                ORDER BY g.created_at DESC
+            ");
+            $stmt->execute([$user['id']]);
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+        } else {
+            // No database connection
+            echo "<p>Database not available</p>";
+            return;
+        }
             $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
         ?>
         <div class="col-md-6 mb-3">
