@@ -4,11 +4,36 @@ namespace App\Http\Controllers;
 
 class HomeController
 {
+    public function __construct()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
     private function renderView($view, $data = [])
     {
         extract($data);
+
+        // Render the view content
         ob_start();
-        include __DIR__ . "/../../../resources/views/{$view}.blade.php";
+        $viewFile = __DIR__ . "/../../../resources/views/{$view}.php";
+        if (file_exists($viewFile)) {
+            include $viewFile;
+        } else {
+            echo "<h1>View not found: {$view}</h1>";
+        }
+        $content = ob_get_clean();
+
+        // Render the layout
+        ob_start();
+        $layoutFile = __DIR__ . "/../../../resources/views/layouts/app.php";
+        if (file_exists($layoutFile)) {
+            include $layoutFile;
+        } else {
+            echo $content; // Fallback if layout doesn't exist
+        }
+
         return ob_get_clean();
     }
 
@@ -63,7 +88,7 @@ class HomeController
             ['type' => 'enrollment', 'action' => 'Added Web Development', 'time' => '2 days ago']
         ];
 
-        echo $this->renderView('pages.dashboard', compact('student', 'summary', 'quickActions', 'recentActivity'));
+        echo $this->renderView('pages/dashboard', compact('student', 'summary', 'quickActions', 'recentActivity'));
     }
 
     public function grades()

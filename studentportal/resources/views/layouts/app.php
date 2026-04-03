@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>@yield('title', 'Student Portal')</title>
-    
+    <title><?php echo isset($title) ? $title : 'Student Portal'; ?></title>
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -75,7 +75,7 @@
 
     <!-- Main Content -->
     <main class="py-4" style="margin-top: 80px;">
-        @yield('content')
+        <?php echo $content; ?>
     </main>
 
     <!-- Mobile Bottom Navigation -->
@@ -120,7 +120,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="js/app.js"></script>
-    
-    @yield('scripts')
+
+    <?php echo isset($scripts) ? $scripts : ''; ?>
 </body>
 </html>

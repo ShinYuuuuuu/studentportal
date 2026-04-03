@@ -42,10 +42,15 @@ $db = null;
 if ($loggedIn) {
     try {
         $db = getDB();
+        // Test the connection with a simple query
+        $stmt = $db->query("SELECT 1");
+        if (!$stmt) {
+            throw new Exception("Database query failed");
+        }
     } catch (Exception $e) {
         // For debugging - remove this in production
         error_log("Database connection error: " . $e->getMessage());
-        die("Database connection failed. Please check your database configuration.");
+        die("Database connection failed. Please run the setup script at /setup_db.php first.");
     }
 }
 
@@ -129,37 +134,9 @@ if (!$loggedIn && $page !== 'login') {
         .grade-poor { border-left: 4px solid #ef4444; background: rgba(239,68,68,0.05); }
         .mobile-nav { display: none; }
         @media (max-width: 768px) {
-            .mobile-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
-            .mobile-nav a { flex: 1; text-align: center; padding: 12px 8px; color: var(--dark); text-decoration: none; font-size: 11px; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-            .mobile-nav a i { font-size: 18px; margin-bottom: 2px; }
-            .mobile-nav a.active { color: var(--primary); font-weight: 600; }
-
-            /* Mobile optimizations */
-            .container { padding-left: 15px; padding-right: 15px; }
-            .card { margin-bottom: 1rem; border-radius: 12px; }
-            .btn { min-height: 44px; padding: 0.5rem 1rem; font-size: 0.9rem; }
-            .table-responsive { font-size: 0.85rem; }
-            .h1, .h2, .h3 { font-size: 1.5rem; line-height: 1.3; }
-            .h4, .h5, .h6 { font-size: 1.1rem; line-height: 1.4; }
-
-            /* Better touch targets */
-            .nav-link { padding: 0.75rem 1rem; min-height: 48px; }
-            input, select, textarea { min-height: 44px; font-size: 16px; }
-
-            /* Summary cards mobile layout */
-            .summary-card { margin-bottom: 1rem; }
-            .summary-card .card-icon { font-size: 2rem; }
-            .summary-card h5 { font-size: 1rem; }
-            .summary-card h2 { font-size: 2rem; }
-
-            /* Quick actions mobile */
-            .quick-action-btn { padding: 1rem; margin-bottom: 0.5rem; border-radius: 12px; }
-            .quick-action-btn i { font-size: 1.5rem; }
-            .quick-action-btn span { font-size: 0.9rem; }
-
-            /* Dashboard spacing */
-            .row.mb-4 > div { margin-bottom: 1rem; }
-
+            .mobile-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000; }
+            .mobile-nav a { flex: 1; text-align: center; padding: 10px; color: var(--dark); text-decoration: none; font-size: 12px; }
+            .mobile-nav a.active { color: var(--primary); }
             body { padding-bottom: 70px; }
         }
     </style>
@@ -372,12 +349,7 @@ if (!$loggedIn && $page !== 'login') {
             ");
             $stmt->execute([$user['id']]);
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
-        } else {
-            // No database connection
-            echo "<p>Database not available</p>";
-            return;
-        }
-            $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
+                $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
         ?>
         <div class="col-md-6 mb-3">
             <div class="card <?= $gradeClass ?>">
@@ -398,7 +370,13 @@ if (!$loggedIn && $page !== 'login') {
                 </div>
             </div>
         </div>
-        <?php endwhile; ?>
+        <?php
+            endwhile;
+        } else {
+            // No database connection
+            echo "<div class='alert alert-warning'>Database not available. Please run the setup script at <a href='/setup_db.php'>/setup_db.php</a> first.</div>";
+        }
+        ?>
     </div>
     
     <div class="card mt-4">

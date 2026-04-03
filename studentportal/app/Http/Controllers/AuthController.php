@@ -4,11 +4,28 @@ namespace App\Http\Controllers;
 
 class AuthController
 {
+    public function __construct()
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
     private function renderView($view, $data = [])
     {
         extract($data);
         ob_start();
-        include __DIR__ . "/../../../resources/views/{$view}.blade.php";
+        $viewFile = __DIR__ . "/../../../resources/views/{$view}.php";
+        if (file_exists($viewFile)) {
+            include $viewFile;
+        } else {
+            $bladeFile = __DIR__ . "/../../../resources/views/{$view}.blade.php";
+            if (file_exists($bladeFile)) {
+                include $bladeFile;
+            } else {
+                echo "<h1>View not found: {$view}</h1>";
+            }
+        }
         return ob_get_clean();
     }
 
