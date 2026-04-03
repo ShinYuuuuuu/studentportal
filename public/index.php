@@ -10,11 +10,18 @@ $loggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 
 // Handle login
 if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $student_id = $_POST['student_id'] ?? '';
+    $user_id = $_POST['user_id'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    // Simple demo login (no database required)
-    if ($student_id === '2023-00123' && $password === 'demo123') {
+    // Check for admin/teacher login first
+    if ($user_id === 'admin' && $password === 'admin123') {
+        // Redirect to teacher portal
+        header('Location: https://your-teacher-portal.herokuapp.com/?page=dashboard');
+        exit;
+    }
+
+    // Student login
+    if ($user_id === '2023-00123' && $password === 'demo123') {
         $_SESSION['logged_in'] = true;
         $_SESSION['user'] = [
             'id' => 1,
@@ -145,8 +152,8 @@ if (!$loggedIn && $page !== 'login') {
                     <?php endif; ?>
                     <form method="POST">
                         <div class="mb-3">
-                            <label class="form-label">Student ID</label>
-                            <input type="text" name="student_id" class="form-control" placeholder="Enter Student ID" required>
+                            <label class="form-label">Student ID / Username</label>
+                            <input type="text" name="user_id" class="form-control" placeholder="Enter Student ID or Username" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password</label>
@@ -155,7 +162,8 @@ if (!$loggedIn && $page !== 'login') {
                         <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
                     </form>
                     <div class="mt-4 p-3 bg-light rounded">
-                        <small><strong>Demo:</strong> ID: 2023-00123 | Password: demo123</small>
+                        <small><strong>Student Demo:</strong> ID: 2023-00123 | Password: demo123<br>
+                        <strong>Teacher Demo:</strong> Username: admin | Password: admin123</small>
                     </div>
                 </div>
             </div>
