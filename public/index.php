@@ -4,18 +4,21 @@ session_start();
 
 // Basic page router
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+$role = isset($_GET['role']) ? $_GET['role'] : (isset($_SESSION['role']) ? $_SESSION['role'] : 'student');
 
 // Check login (simplified)
 $loggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 
 // Handle login
 if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $student_id = $_POST['student_id'] ?? '';
+    $user_id = $_POST['user_id'] ?? '';
     $password = $_POST['password'] ?? '';
+    $login_role = $_POST['role'] ?? 'student';
 
-    // Simple demo login (no database required)
-    if ($student_id === '2023-00123' && $password === 'demo123') {
+    // Simple demo logins
+    if ($login_role === 'student' && $user_id === '2023-00123' && $password === 'demo123') {
         $_SESSION['logged_in'] = true;
+        $_SESSION['role'] = 'student';
         $_SESSION['user'] = [
             'id' => 1,
             'student_id' => '2023-00123',
@@ -24,6 +27,19 @@ if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'program' => 'BS Computer Science',
             'year_level' => '3rd Year',
             'section' => 'CS-3A'
+        ];
+        header('Location: ?page=dashboard');
+        exit;
+    } elseif ($login_role === 'teacher' && $user_id === 'T001' && $password === 'teacher123') {
+        $_SESSION['logged_in'] = true;
+        $_SESSION['role'] = 'teacher';
+        $_SESSION['user'] = [
+            'id' => 1,
+            'teacher_id' => 'T001',
+            'first_name' => 'Dr. Maria',
+            'last_name' => 'Santos',
+            'department' => 'Computer Science',
+            'position' => 'Associate Professor'
         ];
         header('Location: ?page=dashboard');
         exit;
@@ -98,20 +114,34 @@ if (!$loggedIn && $page !== 'login') {
 <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
     <div class="container">
         <a class="navbar-brand fw-bold text-primary" href="?page=dashboard">
-            <i class="bi bi-mortarboard-fill me-2"></i>Student Portal
+            <i class="bi bi-<?php echo $role === 'teacher' ? 'chalkboard-teacher' : 'mortarboard-fill'; ?> me-2"></i>
+            <?php echo $role === 'teacher' ? 'Teacher Portal' : 'Student Portal'; ?>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link <?php echo $page=='dashboard'?'active':'' ?>" href="?page=dashboard"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link <?php echo $page=='grades'?'active':'' ?>" href="?page=grades"><i class="bi bi-bar-chart me-1"></i>Grades</a></li>
-                <li class="nav-item"><a class="nav-link <?php echo $page=='schedule'?'active':'' ?>" href="?page=schedule"><i class="bi bi-calendar me-1"></i>Schedule</a></li>
-                <li class="nav-item"><a class="nav-link <?php echo $page=='enrollment'?'active':'' ?>" href="?page=enrollment"><i class="bi bi-clipboard-check me-1"></i>Enrollment</a></li>
-                <li class="nav-item"><a class="nav-link <?php echo $page=='services'?'active':'' ?>" href="?page=services"><i class="bi bi-gear me-1"></i>Services</a></li>
-                <li class="nav-item"><a class="nav-link <?php echo $page=='downloads'?'active':'' ?>" href="?page=downloads"><i class="bi bi-download me-1"></i>Downloads</a></li>
-                <li class="nav-item"><a class="nav-link <?php echo $page=='profile'?'active':'' ?>" href="?page=profile"><i class="bi bi-person me-1"></i>Profile</a></li>
+                <?php if ($role === 'teacher'): ?>
+                    <!-- Teacher Navigation -->
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='dashboard'?'active':'' ?>" href="?page=dashboard"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='classes'?'active':'' ?>" href="?page=classes"><i class="bi bi-book me-1"></i>My Classes</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='grades'?'active':'' ?>" href="?page=grades"><i class="bi bi-bar-chart me-1"></i>Grades</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='attendance'?'active':'' ?>" href="?page=attendance"><i class="bi bi-check-circle me-1"></i>Attendance</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='students'?'active':'' ?>" href="?page=students"><i class="bi bi-people me-1"></i>Students</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='announcements'?'active':'' ?>" href="?page=announcements"><i class="bi bi-megaphone me-1"></i>Announcements</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='reports'?'active':'' ?>" href="?page=reports"><i class="bi bi-file-earmark-bar-graph me-1"></i>Reports</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='profile'?'active':'' ?>" href="?page=profile"><i class="bi bi-person me-1"></i>Profile</a></li>
+                <?php else: ?>
+                    <!-- Student Navigation -->
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='dashboard'?'active':'' ?>" href="?page=dashboard"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='grades'?'active':'' ?>" href="?page=grades"><i class="bi bi-bar-chart me-1"></i>Grades</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='schedule'?'active':'' ?>" href="?page=schedule"><i class="bi bi-calendar me-1"></i>Schedule</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='enrollment'?'active':'' ?>" href="?page=enrollment"><i class="bi bi-clipboard-check me-1"></i>Enrollment</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='services'?'active':'' ?>" href="?page=services"><i class="bi bi-gear me-1"></i>Services</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='downloads'?'active':'' ?>" href="?page=downloads"><i class="bi bi-download me-1"></i>Downloads</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $page=='profile'?'active':'' ?>" href="?page=profile"><i class="bi bi-person me-1"></i>Profile</a></li>
+                <?php endif; ?>
                 <li class="nav-item"><a class="nav-link text-danger" href="?action=logout"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
             </ul>
         </div>
@@ -136,17 +166,28 @@ if (!$loggedIn && $page !== 'login') {
         <div class="col-md-5">
             <div class="card">
                 <div class="card-header bg-primary text-white text-center py-4">
-                    <h3><i class="bi bi-mortarboard-fill me-2"></i>Student Portal</h3>
+                    <h3><i class="bi bi-mortarboard-fill me-2"></i><?php echo $role === 'teacher' ? 'Teacher' : 'Student'; ?> Portal</h3>
                     <p class="mb-0">Sign in to your account</p>
                 </div>
                 <div class="card-body p-4">
                     <?php if (isset($loginError)): ?>
                     <div class="alert alert-danger"><?php echo $loginError; ?></div>
                     <?php endif; ?>
+
+                    <!-- Role Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Login As:</label>
+                        <div class="d-flex gap-2">
+                            <a href="?page=login&role=student" class="btn btn-outline-primary flex-fill <?php echo $role === 'student' ? 'active' : ''; ?>">Student</a>
+                            <a href="?page=login&role=teacher" class="btn btn-outline-success flex-fill <?php echo $role === 'teacher' ? 'active' : ''; ?>">Teacher</a>
+                        </div>
+                    </div>
+
                     <form method="POST">
+                        <input type="hidden" name="role" value="<?php echo $role; ?>">
                         <div class="mb-3">
-                            <label class="form-label">Student ID</label>
-                            <input type="text" name="student_id" class="form-control" placeholder="Enter Student ID" required>
+                            <label class="form-label"><?php echo $role === 'teacher' ? 'Teacher ID' : 'Student ID'; ?></label>
+                            <input type="text" name="user_id" class="form-control" placeholder="Enter <?php echo $role === 'teacher' ? 'Teacher' : 'Student'; ?> ID" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password</label>
@@ -155,7 +196,8 @@ if (!$loggedIn && $page !== 'login') {
                         <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
                     </form>
                     <div class="mt-4 p-3 bg-light rounded">
-                        <small><strong>Demo:</strong> ID: 2023-00123 | Password: demo123</small>
+                        <small><strong><?php echo $role === 'teacher' ? 'Teacher' : 'Student'; ?> Demo:</strong><br>
+                        ID: <?php echo $role === 'teacher' ? 'T001' : '2023-00123'; ?> | Password: <?php echo $role === 'teacher' ? 'teacher123' : 'demo123'; ?></small>
                     </div>
                 </div>
             </div>
@@ -165,17 +207,164 @@ if (!$loggedIn && $page !== 'login') {
 
 <?php elseif ($page === 'dashboard'): ?>
     <!-- Dashboard -->
-    <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="text-white">
-                    <h2>Good morning, <?php echo $_SESSION['user']['first_name']; ?> 👋</h2>
-                    <p class="mb-0" style="opacity:0.75"><?php echo $_SESSION['user']['program']; ?> • <?php echo $_SESSION['user']['year_level']; ?> • <?php echo $_SESSION['user']['section']; ?></p>
+    <?php if ($role === 'teacher'): ?>
+        <!-- Teacher Dashboard -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #059669, #7c3aed);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-white">
+                        <h2>Good morning, <?php echo $_SESSION['user']['first_name']; ?> 👋</h2>
+                        <p class="mb-0" style="opacity:0.75"><?php echo $_SESSION['user']['department']; ?> • <?php echo $_SESSION['user']['position']; ?></p>
+                    </div>
+                    <div class="badge bg-white text-primary fs-6">ID: <?php echo $_SESSION['user']['teacher_id']; ?></div>
                 </div>
-                <div class="badge bg-white text-primary fs-6">ID: <?php echo $_SESSION['user']['student_id']; ?></div>
             </div>
         </div>
-    </div>
+
+        <!-- Teacher Overview Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-book fs-1 text-success"></i>
+                        <h4 class="mt-2">5</h4>
+                        <small class="text-muted">Total Classes</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people fs-1 text-primary"></i>
+                        <h4 class="mt-2">127</h4>
+                        <small class="text-muted">Total Students</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                        <h4 class="mt-2">12</h4>
+                        <small class="text-muted">Pending Grades</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-event fs-1 text-danger"></i>
+                        <h4 class="mt-2">3</h4>
+                        <small class="text-muted">Today's Classes</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">📅 Today's Schedule</h5></div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Next class:</strong> Programming 101 – 10:00 AM (Room 301)
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <h6>09:00 AM</h6>
+                                <h5>Data Structures</h5>
+                                <small class="text-muted">Room 302 • Lab Session</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <h6>10:00 AM</h6>
+                                <h5>Programming 101</h5>
+                                <small class="text-muted">Room 301 • Lecture</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <h6>02:00 PM</h6>
+                                <h5>Web Development</h5>
+                                <small class="text-muted">Lab 204 • Lab Session</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <h5 class="mb-3">⚡ Quick Actions</h5>
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=grades" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-pencil-square fs-2 d-block mb-2"></i>Enter Grades
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=attendance" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-check-circle fs-2 d-block mb-2"></i>Take Attendance
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=classes" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-book fs-2 d-block mb-2"></i>View Classes
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=announcements" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-megaphone fs-2 d-block mb-2"></i>Post Announcement
+                </a>
+            </div>
+        </div>
+
+        <!-- Notifications Panel -->
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">🔔 Notifications</h5></div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                    <i class="bi bi-exclamation-triangle text-warning me-3 fs-4"></i>
+                    <div>
+                        <h6 class="mb-1">Grades not submitted for Math 101</h6>
+                        <small class="text-muted">Deadline: Tomorrow 5:00 PM</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                    <i class="bi bi-megaphone text-info me-3 fs-4"></i>
+                    <div>
+                        <h6 class="mb-1">New announcement from admin</h6>
+                        <small class="text-muted">Faculty meeting this Friday</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center p-3 border rounded">
+                    <i class="bi bi-calendar-event text-success me-3 fs-4"></i>
+                    <div>
+                        <h6 class="mb-1">Parent-teacher conference</h6>
+                        <small class="text-muted">Next week - Room 501</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
+        <!-- Student Dashboard -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-white">
+                        <h2>Good morning, <?php echo $_SESSION['user']['first_name']; ?> 👋</h2>
+                        <p class="mb-0" style="opacity:0.75"><?php echo $_SESSION['user']['program']; ?> • <?php echo $_SESSION['user']['year_level']; ?> • <?php echo $_SESSION['user']['section']; ?></p>
+                    </div>
+                    <div class="badge bg-white text-primary fs-6">ID: <?php echo $_SESSION['user']['student_id']; ?></div>
+                </div>
+            </div>
+        </div>
 
     <div class="row mb-4">
         <div class="col-md-3 col-6 mb-3">
@@ -271,8 +460,121 @@ if (!$loggedIn && $page !== 'login') {
             </div>
         </div>
     </div>
+    <?php else: ?>
+        <!-- Student Dashboard -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-white">
+                        <h2>Good morning, <?php echo $_SESSION['user']['first_name']; ?> 👋</h2>
+                        <p class="mb-0" style="opacity:0.75"><?php echo $_SESSION['user']['program']; ?> • <?php echo $_SESSION['user']['year_level']; ?> • <?php echo $_SESSION['user']['section']; ?></p>
+                    </div>
+                    <div class="badge bg-white text-primary fs-6">ID: <?php echo $_SESSION['user']['student_id']; ?></div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- Student Overview Cards (only for students) -->
+    <?php if ($role === 'student'): ?>
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up fs-1 text-success"></i>
+                        <h4 class="mt-2">1.85</h4>
+                        <small class="text-muted">Current GPA</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock fs-1 text-primary"></i>
+                        <h4 class="mt-2">Web Dev</h4>
+                        <small class="text-muted">Next Class</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-megaphone fs-1 text-warning"></i>
+                        <h4 class="mt-2">2</h4>
+                        <small class="text-muted">Announcements</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-list-check fs-1 text-danger"></i>
+                        <h4 class="mt-2">3</h4>
+                        <small class="text-muted">Pending Tasks</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mb-3">Quick Actions</h5>
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=grades" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-bar-chart fs-2 d-block mb-2"></i>View Grades
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=schedule" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-calendar fs-2 d-block mb-2"></i>View Schedule
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=enrollment" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-clipboard-check fs-2 d-block mb-2"></i>Enroll Now
+                </a>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <a href="?page=downloads" class="quick-action-btn text-center py-4">
+                    <i class="bi bi-download fs-2 d-block mb-2"></i>Downloads
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header"><h5 class="mb-0">Recent Activity</h5></div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-bar-chart text-primary me-3"></i>
+                            <div><h6 class="mb-0">Viewed Math 101 Grades</h6><small class="text-muted">2 hours ago</small></div>
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-download text-success me-3"></i>
+                            <div><h6 class="mb-0">Downloaded Clearance Form</h6><small class="text-muted">1 day ago</small></div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-clipboard-check text-warning me-3"></i>
+                            <div><h6 class="mb-0">Completed Enrollment</h6><small class="text-muted">2 days ago</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"><h5 class="mb-0">Pending Tasks</h5></div>
+                    <div class="card-body">
+                        <div class="mb-2"><span class="badge bg-danger me-2">!</span>Submit thesis proposal</div>
+                        <div class="mb-2"><span class="badge bg-warning me-2">!</span>Pay tuition fee</div>
+                        <div><span class="badge bg-info me-2">!</span>Complete clearance</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
 <?php elseif ($page === 'grades'): ?>
+    <!-- Grades -->
     <!-- Grades -->
     <div class="card mb-4" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
         <div class="card-body p-4">
