@@ -42,10 +42,15 @@ $db = null;
 if ($loggedIn) {
     try {
         $db = getDB();
+        // Test the connection with a simple query
+        $stmt = $db->query("SELECT 1");
+        if (!$stmt) {
+            throw new Exception("Database query failed");
+        }
     } catch (Exception $e) {
         // For debugging - remove this in production
         error_log("Database connection error: " . $e->getMessage());
-        die("Database connection failed. Please check your database configuration.");
+        die("Database connection failed. Please run the setup script at /setup_db.php first.");
     }
 }
 
@@ -344,12 +349,7 @@ if (!$loggedIn && $page !== 'login') {
             ");
             $stmt->execute([$user['id']]);
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
-        } else {
-            // No database connection
-            echo "<p>Database not available</p>";
-            return;
-        }
-            $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
+                $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
         ?>
         <div class="col-md-6 mb-3">
             <div class="card <?= $gradeClass ?>">
@@ -370,7 +370,13 @@ if (!$loggedIn && $page !== 'login') {
                 </div>
             </div>
         </div>
-        <?php endwhile; ?>
+        <?php
+            endwhile;
+        } else {
+            // No database connection
+            echo "<div class='alert alert-warning'>Database not available. Please run the setup script at <a href='/setup_db.php'>/setup_db.php</a> first.</div>";
+        }
+        ?>
     </div>
     
     <div class="card mt-4">
