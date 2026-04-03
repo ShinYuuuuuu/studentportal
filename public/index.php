@@ -1,79 +1,30 @@
 <?php
+// Simplified Student Portal - Working Version
 session_start();
 
-// Database connection (using MySQL)
-function getDB() {
-    // Check if Heroku JawsDB URL is available
-    if (getenv('JAWSDB_URL')) {
-        $url = parse_url(getenv('JAWSDB_URL'));
-        $host = $url['host'];
-        $dbname = substr($url['path'], 1);
-        $username = $url['user'];
-        $password = $url['pass'];
-    } else {
-        // Local development fallback
-        $host = 'localhost';
-        $dbname = 'student_portal';
-        $username = 'root';
-        $password = '';
-    }
-
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        return $pdo;
-    } catch (PDOException $e) {
-        die("Database connection failed: " . $e->getMessage());
-    }
-}
-
-// Database initialization is handled by setup_db.php script
-
-// Simple router
+// Basic page router
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-$action = isset($_GET['action']) ? $_GET['action'] : '';
 
-// Check login
+// Check login (simplified)
 $loggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
-$user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
-
-// Initialize database connection for logged-in users
-$db = null;
-if ($loggedIn) {
-    try {
-        $db = getDB();
-        // Test the connection with a simple query
-        $stmt = $db->query("SELECT 1");
-        if (!$stmt) {
-            throw new Exception("Database query failed");
-        }
-    } catch (Exception $e) {
-        // For debugging - remove this in production
-        error_log("Database connection error: " . $e->getMessage());
-        die("Database connection failed. Please run the setup script at /setup_db.php first.");
-    }
-}
 
 // Handle login
 if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = $_POST['student_id'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    $db = getDB();
-    $stmt = $db->prepare("SELECT * FROM users WHERE student_id = ?");
-    $stmt->execute([$student_id]);
-    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // For demo purposes, check plain text password
-    if ($userData && $password === 'demo123') {
-        // Valid login
-    } else {
-        $userData = false;
-    }
-
-    if ($userData) {
+    // Simple demo login (no database required)
+    if ($student_id === '2023-00123' && $password === 'demo123') {
         $_SESSION['logged_in'] = true;
-        $_SESSION['user'] = $userData;
+        $_SESSION['user'] = [
+            'id' => 1,
+            'student_id' => '2023-00123',
+            'first_name' => 'Reynante',
+            'last_name' => 'Dela Cruz',
+            'program' => 'BS Computer Science',
+            'year_level' => '3rd Year',
+            'section' => 'CS-3A'
+        ];
         header('Location: ?page=dashboard');
         exit;
     } else {
@@ -82,13 +33,13 @@ if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Handle logout
-if ($action === 'logout') {
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
     header('Location: ?page=login');
     exit;
 }
 
-// If not logged in, show login (except for login page)
+// If not logged in and not on login page, redirect to login
 if (!$loggedIn && $page !== 'login') {
     header('Location: ?page=login');
     exit;
@@ -142,7 +93,8 @@ if (!$loggedIn && $page !== 'login') {
     </style>
 </head>
 <body>
-<?php if ($loggedIn && $page !== 'login'): ?>
+
+<?php if ($loggedIn): ?>
 <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
     <div class="container">
         <a class="navbar-brand fw-bold text-primary" href="?page=dashboard">
@@ -153,13 +105,13 @@ if (!$loggedIn && $page !== 'login') {
         </button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link <?= $page=='dashboard'?'active':'' ?>" href="?page=dashboard"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link <?= $page=='grades'?'active':'' ?>" href="?page=grades"><i class="bi bi-bar-chart me-1"></i>Grades</a></li>
-                <li class="nav-item"><a class="nav-link <?= $page=='schedule'?'active':'' ?>" href="?page=schedule"><i class="bi bi-calendar me-1"></i>Schedule</a></li>
-                <li class="nav-item"><a class="nav-link <?= $page=='enrollment'?'active':'' ?>" href="?page=enrollment"><i class="bi bi-clipboard-check me-1"></i>Enrollment</a></li>
-                <li class="nav-item"><a class="nav-link <?= $page=='services'?'active':'' ?>" href="?page=services"><i class="bi bi-gear me-1"></i>Services</a></li>
-                <li class="nav-item"><a class="nav-link <?= $page=='downloads'?'active':'' ?>" href="?page=downloads"><i class="bi bi-download me-1"></i>Downloads</a></li>
-                <li class="nav-item"><a class="nav-link <?= $page=='profile'?'active':'' ?>" href="?page=profile"><i class="bi bi-person me-1"></i>Profile</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='dashboard'?'active':'' ?>" href="?page=dashboard"><i class="bi bi-house-door me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='grades'?'active':'' ?>" href="?page=grades"><i class="bi bi-bar-chart me-1"></i>Grades</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='schedule'?'active':'' ?>" href="?page=schedule"><i class="bi bi-calendar me-1"></i>Schedule</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='enrollment'?'active':'' ?>" href="?page=enrollment"><i class="bi bi-clipboard-check me-1"></i>Enrollment</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='services'?'active':'' ?>" href="?page=services"><i class="bi bi-gear me-1"></i>Services</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='downloads'?'active':'' ?>" href="?page=downloads"><i class="bi bi-download me-1"></i>Downloads</a></li>
+                <li class="nav-item"><a class="nav-link <?php echo $page=='profile'?'active':'' ?>" href="?page=profile"><i class="bi bi-person me-1"></i>Profile</a></li>
                 <li class="nav-item"><a class="nav-link text-danger" href="?action=logout"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
             </ul>
         </div>
@@ -168,11 +120,11 @@ if (!$loggedIn && $page !== 'login') {
 
 <!-- Mobile Navigation -->
 <div class="mobile-nav d-md-none">
-    <a href="?page=dashboard" class="<?= $page=='dashboard'?'active':'' ?>"><i class="bi bi-house-door d-block fs-5"></i>Home</a>
-    <a href="?page=grades" class="<?= $page=='grades'?'active':'' ?>"><i class="bi bi-bar-chart d-block fs-5"></i>Grades</a>
-    <a href="?page=schedule" class="<?= $page=='schedule'?'active':'' ?>"><i class="bi bi-calendar d-block fs-5"></i>Schedule</a>
-    <a href="?page=services" class="<?= $page=='services'?'active':'' ?>"><i class="bi bi-gear d-block fs-5"></i>Services</a>
-    <a href="?page=profile" class="<?= $page=='profile'?'active':'' ?>"><i class="bi bi-person d-block fs-5"></i>Profile</a>
+    <a href="?page=dashboard" class="<?php echo $page=='dashboard'?'active':'' ?>"><i class="bi bi-house-door d-block fs-5"></i>Home</a>
+    <a href="?page=grades" class="<?php echo $page=='grades'?'active':'' ?>"><i class="bi bi-bar-chart d-block fs-5"></i>Grades</a>
+    <a href="?page=schedule" class="<?php echo $page=='schedule'?'active':'' ?>"><i class="bi bi-calendar d-block fs-5"></i>Schedule</a>
+    <a href="?page=services" class="<?php echo $page=='services'?'active':'' ?>"><i class="bi bi-gear d-block fs-5"></i>Services</a>
+    <a href="?page=profile" class="<?php echo $page=='profile'?'active':'' ?>"><i class="bi bi-person d-block fs-5"></i>Profile</a>
 </div>
 
 <main class="container py-4 mt-5">
@@ -189,7 +141,7 @@ if (!$loggedIn && $page !== 'login') {
                 </div>
                 <div class="card-body p-4">
                     <?php if (isset($loginError)): ?>
-                    <div class="alert alert-danger"><?= $loginError ?></div>
+                    <div class="alert alert-danger"><?php echo $loginError; ?></div>
                     <?php endif; ?>
                     <form method="POST">
                         <div class="mb-3">
@@ -217,14 +169,14 @@ if (!$loggedIn && $page !== 'login') {
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="text-white">
-                    <h2>Good morning, <?= $user['first_name'] ?> 👋</h2>
-                    <p class="mb-0" style="opacity:0.75"><?= $user['program'] ?> • <?= $user['year_level'] ?> • <?= $user['section'] ?></p>
+                    <h2>Good morning, <?php echo $_SESSION['user']['first_name']; ?> 👋</h2>
+                    <p class="mb-0" style="opacity:0.75"><?php echo $_SESSION['user']['program']; ?> • <?php echo $_SESSION['user']['year_level']; ?> • <?php echo $_SESSION['user']['section']; ?></p>
                 </div>
-                <div class="badge bg-white text-primary fs-6">ID: <?= $user['student_id'] ?></div>
+                <div class="badge bg-white text-primary fs-6">ID: <?php echo $_SESSION['user']['student_id']; ?></div>
             </div>
         </div>
     </div>
-    
+
     <div class="row mb-4">
         <div class="col-md-3 col-6 mb-3">
             <div class="card h-100">
@@ -263,7 +215,7 @@ if (!$loggedIn && $page !== 'login') {
             </div>
         </div>
     </div>
-    
+
     <h5 class="mb-3">Quick Actions</h5>
     <div class="row mb-4">
         <div class="col-md-3 col-6 mb-3">
@@ -287,7 +239,7 @@ if (!$loggedIn && $page !== 'login') {
             </a>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-md-8">
             <div class="card">
@@ -336,49 +288,130 @@ if (!$loggedIn && $page !== 'login') {
             </div>
         </div>
     </div>
-    
+
     <div class="row">
-        <?php
-        if ($db) {
-            $stmt = $db->prepare("
-                SELECT g.*, c.course_name as subject, c.course_code as code, c.units
-                FROM grades g
-                JOIN courses c ON g.course_id = c.id
-                WHERE g.student_id = ?
-                ORDER BY g.created_at DESC
-            ");
-            $stmt->execute([$user['id']]);
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
-                $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
-        ?>
+        <!-- Sample Grades -->
         <div class="col-md-6 mb-3">
-            <div class="card <?= $gradeClass ?>">
+            <div class="card grade-excellent">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h5><?= $row['subject'] ?></h5>
-                            <small class="text-muted"><?= $row['code'] ?> • <?= $row['units'] ?> units</small>
+                            <h5>Mathematics 101</h5>
+                            <small class="text-muted">MATH101 • 3 units</small>
                         </div>
                         <div class="text-end">
-                            <h3 class="mb-0"><?= $row['grade'] ?></h3>
-                            <small><?= $row['equivalent'] ?></small>
+                            <h3 class="mb-0">1.75</h3>
+                            <small>Excellent</small>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <span class="badge bg-success"><?= $row['remarks'] ?></span>
+                        <span class="badge bg-success">Passed</span>
                     </div>
                 </div>
             </div>
         </div>
-        <?php
-            endwhile;
-        } else {
-            // No database connection
-            echo "<div class='alert alert-warning'>Database not available. Please run the setup script at <a href='/setup_db.php'>/setup_db.php</a> first.</div>";
-        }
-        ?>
+
+        <div class="col-md-6 mb-3">
+            <div class="card grade-good">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>English Composition</h5>
+                            <small class="text-muted">ENG101 • 3 units</small>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="mb-0">2.00</h3>
+                            <small>Very Good</small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Passed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card grade-excellent">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Programming Fundamentals</h5>
+                            <small class="text-muted">CS101 • 3 units</small>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="mb-0">1.50</h3>
+                            <small>Excellent</small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Passed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card grade-good">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Data Structures</h5>
+                            <small class="text-muted">CS201 • 3 units</small>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="mb-0">2.25</h3>
+                            <small>Good</small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Passed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card grade-excellent">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Database Management</h5>
+                            <small class="text-muted">CS202 • 3 units</small>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="mb-0">1.75</h3>
+                            <small>Excellent</small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Passed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card grade-good">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Web Development</h5>
+                            <small class="text-muted">CS301 • 3 units</small>
+                        </div>
+                        <div class="text-end">
+                            <h3 class="mb-0">2.00</h3>
+                            <small>Very Good</small>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Passed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
     <div class="card mt-4">
         <div class="card-header"><h5 class="mb-0">Grade Summary</h5></div>
         <div class="card-body">
@@ -398,7 +431,7 @@ if (!$loggedIn && $page !== 'login') {
             <p class="mb-0" style="opacity:0.75">2nd Semester AY 2023-2024</p>
         </div>
     </div>
-    
+
     <div class="card mb-4">
         <div class="card-header"><h5 class="mb-0">Weekly Schedule</h5></div>
         <div class="card-body">
@@ -414,43 +447,61 @@ if (!$loggedIn && $page !== 'login') {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $stmt = $db->prepare("
-                            SELECT s.*, c.course_name as subject, c.course_code
-                            FROM schedule s
-                            JOIN courses c ON s.course_id = c.id
-                            ORDER BY
-                                CASE s.day_of_week
-                                    WHEN 'monday' THEN 1
-                                    WHEN 'tuesday' THEN 2
-                                    WHEN 'wednesday' THEN 3
-                                    WHEN 'thursday' THEN 4
-                                    WHEN 'friday' THEN 5
-                                    WHEN 'saturday' THEN 6
-                                    WHEN 'sunday' THEN 7
-                                END, s.start_time
-                        ");
-                        $stmt->execute();
-                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
-                            // Format the data to match the old structure
-                            $row['day'] = ucfirst($row['day_of_week']);
-                            $row['time'] = date('H:i', strtotime($row['start_time'])) . '-' . date('H:i', strtotime($row['end_time']));
-                            $row['type'] = ucfirst($row['schedule_type']);
-                        ?>
                         <tr>
-                            <td><?= $row['day'] ?></td>
-                            <td><?= $row['time'] ?></td>
-                            <td><?= $row['subject'] ?></td>
-                            <td><?= $row['room'] ?></td>
-                            <td><span class="badge bg-primary"><?= $row['type'] ?></span></td>
+                            <td>Monday</td>
+                            <td>08:00-09:30</td>
+                            <td>Mathematics 101</td>
+                            <td>301</td>
+                            <td><span class="badge bg-primary">Lecture</span></td>
                         </tr>
-                        <?php endwhile; ?>
+                        <tr>
+                            <td>Monday</td>
+                            <td>10:00-11:30</td>
+                            <td>Web Development</td>
+                            <td>Lab 204</td>
+                            <td><span class="badge bg-primary">Laboratory</span></td>
+                        </tr>
+                        <tr>
+                            <td>Tuesday</td>
+                            <td>09:00-10:30</td>
+                            <td>Data Structures</td>
+                            <td>302</td>
+                            <td><span class="badge bg-primary">Lecture</span></td>
+                        </tr>
+                        <tr>
+                            <td>Tuesday</td>
+                            <td>13:00-14:30</td>
+                            <td>English Composition</td>
+                            <td>105</td>
+                            <td><span class="badge bg-primary">Lecture</span></td>
+                        </tr>
+                        <tr>
+                            <td>Wednesday</td>
+                            <td>08:00-11:00</td>
+                            <td>Programming Lab</td>
+                            <td>Lab 205</td>
+                            <td><span class="badge bg-primary">Laboratory</span></td>
+                        </tr>
+                        <tr>
+                            <td>Thursday</td>
+                            <td>10:00-11:30</td>
+                            <td>Database Management</td>
+                            <td>303</td>
+                            <td><span class="badge bg-primary">Lecture</span></td>
+                        </tr>
+                        <tr>
+                            <td>Friday</td>
+                            <td>09:00-12:00</td>
+                            <td>Thesis Consultation</td>
+                            <td>Faculty Room</td>
+                            <td><span class="badge bg-primary">Consultation</span></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Today's Classes</h5></div>
         <div class="card-body">
@@ -469,7 +520,7 @@ if (!$loggedIn && $page !== 'login') {
             <p class="mb-0" style="opacity:0.75">2nd Semester AY 2023-2024</p>
         </div>
     </div>
-    
+
     <div class="card mb-4">
         <div class="card-header"><h5 class="mb-0">Available Subjects</h5></div>
         <div class="card-body">
@@ -485,28 +536,54 @@ if (!$loggedIn && $page !== 'login') {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $stmt = $db->query("SELECT * FROM courses ORDER BY course_code");
-                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
-                            // Map fields to match old structure
-                            $row['code'] = $row['course_code'];
-                            $row['name'] = $row['course_name'];
-                            $row['schedule'] = 'TBD'; // Placeholder since schedule is in separate table
-                        ?>
                         <tr>
-                            <td><?= $row['code'] ?></td>
-                            <td><?= $row['name'] ?></td>
-                            <td><?= $row['units'] ?></td>
-                            <td><?= $row['schedule'] ?></td>
+                            <td>CS401</td>
+                            <td>Software Engineering</td>
+                            <td>3</td>
+                            <td>MWF 10:00-11:30</td>
                             <td><button class="btn btn-sm btn-primary">Add</button></td>
                         </tr>
-                        <?php endwhile; ?>
+                        <tr>
+                            <td>CS402</td>
+                            <td>Mobile Development</td>
+                            <td>3</td>
+                            <td>TTH 13:00-14:30</td>
+                            <td><button class="btn btn-sm btn-primary">Add</button></td>
+                        </tr>
+                        <tr>
+                            <td>CS403</td>
+                            <td>Computer Networks</td>
+                            <td>3</td>
+                            <td>MWF 08:00-09:30</td>
+                            <td><button class="btn btn-sm btn-primary">Add</button></td>
+                        </tr>
+                        <tr>
+                            <td>CS404</td>
+                            <td>AI Fundamentals</td>
+                            <td>3</td>
+                            <td>TTH 10:00-11:30</td>
+                            <td><button class="btn btn-sm btn-primary">Add</button></td>
+                        </tr>
+                        <tr>
+                            <td>MATH201</td>
+                            <td>Calculus II</td>
+                            <td>3</td>
+                            <td>MWF 13:00-14:30</td>
+                            <td><button class="btn btn-sm btn-primary">Add</button></td>
+                        </tr>
+                        <tr>
+                            <td>ENG201</td>
+                            <td>Technical Writing</td>
+                            <td>3</td>
+                            <td>TTH 08:00-09:30</td>
+                            <td><button class="btn btn-sm btn-primary">Add</button></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-    
+
     <div class="alert alert-warning">
         <i class="bi bi-clock me-2"></i>
         <strong>Enrollment Deadline:</strong> March 20, 2024
@@ -520,44 +597,90 @@ if (!$loggedIn && $page !== 'login') {
             <p class="mb-0" style="opacity:0.75">Request documents, pay fees, and more</p>
         </div>
     </div>
-    
+
     <?php
     $categories = ['Academic', 'Financial', 'Documents'];
     foreach ($categories as $cat):
     ?>
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><?= $cat ?></h5>
+            <h5 class="mb-0"><?php echo $cat; ?></h5>
         </div>
         <div class="card-body">
-            <?php
-            // Static services data (since services table doesn't exist in new schema)
-            $services = [
-                ['Academic', 'Request TOR', 'Transcript of Records', '3-5 days'],
-                ['Academic', 'Request Diploma', 'Official Diploma', '5-7 days'],
-                ['Academic', 'Request Certificate', 'Various Certificates', '2-3 days'],
-                ['Financial', 'Pay Tuition', 'Online Payment', 'Immediate'],
-                ['Financial', 'View Balance', 'Check Account', 'Immediate'],
-                ['Documents', 'Apply Clearance', 'Student Clearance', '2-3 days'],
-                ['Documents', 'Request ID', 'ID Replacement', '3-5 days']
-            ];
-            foreach ($services as $row):
-                if ($row[0] === $cat):
-            ?>
-            <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
-                <div>
-                    <h6 class="mb-1"><?= $row[1] ?></h6>
-                    <small class="text-muted"><?= $row[2] ?></small>
+            <?php if ($cat === 'Academic'): ?>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">Request TOR</h6>
+                        <small class="text-muted">Transcript of Records</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">3-5 days</small>
+                        <button class="btn btn-sm btn-primary ms-2">Request</button>
+                    </div>
                 </div>
-                <div class="text-end">
-                    <small class="text-muted"><?= $row[3] ?></small>
-                    <button class="btn btn-sm btn-primary ms-2">Request</button>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">Request Diploma</h6>
+                        <small class="text-muted">Official Diploma</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">5-7 days</small>
+                        <button class="btn btn-sm btn-primary ms-2">Request</button>
+                    </div>
                 </div>
-            </div>
-            <?php
-                endif;
-            endforeach;
-            ?>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">Request Certificate</h6>
+                        <small class="text-muted">Various Certificates</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">2-3 days</small>
+                        <button class="btn btn-sm btn-primary ms-2">Request</button>
+                    </div>
+                </div>
+            <?php elseif ($cat === 'Financial'): ?>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">Pay Tuition</h6>
+                        <small class="text-muted">Online Payment</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">Immediate</small>
+                        <button class="btn btn-sm btn-primary ms-2">Pay Now</button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">View Balance</h6>
+                        <small class="text-muted">Check Account</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">Immediate</small>
+                        <button class="btn btn-sm btn-primary ms-2">View</button>
+                    </div>
+                </div>
+            <?php elseif ($cat === 'Documents'): ?>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">Apply Clearance</h6>
+                        <small class="text-muted">Student Clearance</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">2-3 days</small>
+                        <button class="btn btn-sm btn-primary ms-2">Apply</button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                    <div>
+                        <h6 class="mb-1">Request ID</h6>
+                        <small class="text-muted">ID Replacement</small>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">3-5 days</small>
+                        <button class="btn btn-sm btn-primary ms-2">Request</button>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
     <?php endforeach; ?>
@@ -570,7 +693,7 @@ if (!$loggedIn && $page !== 'login') {
             <p class="mb-0" style="opacity:0.75">Forms, documents, and resources</p>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Available Documents</h5></div>
         <div class="card-body">
@@ -586,23 +709,41 @@ if (!$loggedIn && $page !== 'login') {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        $stmt = $db->query("SELECT * FROM documents ORDER BY created_at DESC");
-                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
-                            // Map fields to match old structure
-                            $row['name'] = $row['document_name'];
-                            $row['type'] = strtoupper($row['document_type']);
-                            $row['size'] = $row['file_size'];
-                            $row['date'] = date('Y-m-d', strtotime($row['created_at']));
-                        ?>
                         <tr>
-                            <td><?= $row['name'] ?></td>
-                            <td><span class="badge bg-<?= $row['type']=='PDF'?'danger':'success' ?>"><?= $row['type'] ?></span></td>
-                            <td><?= $row['size'] ?></td>
-                            <td><?= $row['date'] ?></td>
+                            <td>Clearance Form</td>
+                            <td><span class="badge bg-danger">PDF</span></td>
+                            <td>245 KB</td>
+                            <td>2024-03-01</td>
                             <td><button class="btn btn-sm btn-primary"><i class="bi bi-download"></i></button></td>
                         </tr>
-                        <?php endwhile; ?>
+                        <tr>
+                            <td>Enrollment Form</td>
+                            <td><span class="badge bg-danger">PDF</span></td>
+                            <td>312 KB</td>
+                            <td>2024-02-28</td>
+                            <td><button class="btn btn-sm btn-primary"><i class="bi bi-download"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td>Grade Slip Template</td>
+                            <td><span class="badge bg-success">Excel</span></td>
+                            <td>45 KB</td>
+                            <td>2024-02-25</td>
+                            <td><button class="btn btn-sm btn-primary"><i class="bi bi-download"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td>Thesis Guidelines</td>
+                            <td><span class="badge bg-danger">PDF</span></td>
+                            <td>1.2 MB</td>
+                            <td>2024-02-20</td>
+                            <td><button class="btn btn-sm btn-primary"><i class="bi bi-download"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td>Student Handbook</td>
+                            <td><span class="badge bg-danger">PDF</span></td>
+                            <td>3.5 MB</td>
+                            <td>2024-02-15</td>
+                            <td><button class="btn btn-sm btn-primary"><i class="bi bi-download"></i></button></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -618,22 +759,23 @@ if (!$loggedIn && $page !== 'login') {
                     <i class="bi bi-person-circle fs-1 text-primary"></i>
                 </div>
                 <div class="text-white">
-                    <h2><?= $user['first_name'] ?> <?= $user['last_name'] ?></h2>
-                    <p class="mb-0" style="opacity:0.75"><?= $user['program'] ?></p>
+                    <h2><?php echo $_SESSION['user']['first_name']; ?> <?php echo $_SESSION['user']['last_name']; ?></h2>
+                    <p class="mb-0" style="opacity:0.75"><?php echo $_SESSION['user']['program']; ?></p>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header"><h5 class="mb-0">Personal Information</h5></div>
                 <div class="card-body">
-                    <p><strong>Student ID:</strong> <?= $user['student_id'] ?></p>
-                    <p><strong>Email:</strong> <?= $user['email'] ?></p>
-                    <p><strong>Phone:</strong> <?= $user['phone'] ?></p>
-                    <p><strong>Section:</strong> <?= $user['section'] ?></p>
+                    <p><strong>Student ID:</strong> <?php echo $_SESSION['user']['student_id']; ?></p>
+                    <p><strong>Name:</strong> <?php echo $_SESSION['user']['first_name']; ?> <?php echo $_SESSION['user']['last_name']; ?></p>
+                    <p><strong>Program:</strong> <?php echo $_SESSION['user']['program']; ?></p>
+                    <p><strong>Year Level:</strong> <?php echo $_SESSION['user']['year_level']; ?></p>
+                    <p><strong>Section:</strong> <?php echo $_SESSION['user']['section']; ?></p>
                 </div>
             </div>
         </div>
@@ -641,15 +783,15 @@ if (!$loggedIn && $page !== 'login') {
             <div class="card mb-4">
                 <div class="card-header"><h5 class="mb-0">Academic Info</h5></div>
                 <div class="card-body">
-                    <p><strong>Program:</strong> <?= $user['program'] ?></p>
-                    <p><strong>Year Level:</strong> <?= $user['year_level'] ?></p>
+                    <p><strong>Program:</strong> <?php echo $_SESSION['user']['program']; ?></p>
+                    <p><strong>Year Level:</strong> <?php echo $_SESSION['user']['year_level']; ?></p>
                     <p><strong>Current GPA:</strong> 1.85</p>
                     <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-body">
             <button class="btn btn-primary me-2">Edit Profile</button>
@@ -657,6 +799,7 @@ if (!$loggedIn && $page !== 'login') {
             <button class="btn btn-outline-danger">Logout</button>
         </div>
     </div>
+
 <?php endif; ?>
 
 </main>
