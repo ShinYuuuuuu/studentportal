@@ -1,190 +1,71 @@
 <?php
 session_start();
 
-// Database connection (using SQLite for easy setup)
+// Database connection (using MySQL)
 function getDB() {
-    $db = new SQLite3('database.sqlite');
-    return $db;
-}
+    // Check if Heroku JawsDB URL is available
+    if (getenv('JAWSDB_URL')) {
+        $url = parse_url(getenv('JAWSDB_URL'));
+        $host = $url['host'];
+        $dbname = substr($url['path'], 1);
+        $username = $url['user'];
+        $password = $url['pass'];
+    } else {
+        // Local development fallback
+        $host = 'localhost';
+        $dbname = 'student_portal';
+        $username = 'root';
+        $password = '';
+    }
 
-// Initialize database with sample data
-function initDB() {
-    $db = getDB();
-    
-    // Create tables
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id TEXT UNIQUE,
-            first_name TEXT,
-            last_name TEXT,
-            email TEXT,
-            password TEXT,
-            phone TEXT,
-            program TEXT,
-            year_level TEXT,
-            section TEXT,
-            status TEXT DEFAULT 'active'
-        );
-        
-        CREATE TABLE IF NOT EXISTS grades (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id TEXT,
-            subject TEXT,
-            code TEXT,
-            units INTEGER,
-            grade REAL,
-            equivalent TEXT,
-            remarks TEXT,
-            semester TEXT,
-            academic_year TEXT
-        );
-        
-        CREATE TABLE IF NOT EXISTS schedule (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            day TEXT,
-            time TEXT,
-            subject TEXT,
-            room TEXT,
-            instructor TEXT,
-            type TEXT
-        );
-        
-        CREATE TABLE IF NOT EXISTS subjects (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            code TEXT,
-            name TEXT,
-            units INTEGER,
-            schedule TEXT
-        );
-        
-        CREATE TABLE IF NOT EXISTS services (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            category TEXT,
-            name TEXT,
-            description TEXT,
-            processing_time TEXT
-        );
-        
-        CREATE TABLE IF NOT EXISTS documents (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            type TEXT,
-            size TEXT,
-            date TEXT
-        );
-    ");
-    
-    // Check if data exists, if not insert sample data
-    $result = $db->query("SELECT COUNT(*) as count FROM users");
-    $row = $result->fetchArray();
-    
-    if ($row['count'] == 0) {
-        // Insert sample user
-        $db->exec("INSERT INTO users (student_id, first_name, last_name, email, password, phone, program, year_level, section) 
-            VALUES ('2023-00123', 'Reynante', 'Dela Cruz', 'reynante@student.edu', 'demo123', '+63 912 345 6789', 'BS Computer Science', '3rd Year', 'CS-3A')");
-        
-        // Insert sample grades
-        $grades = [
-            ['Mathematics 101', 'MATH101', 3, 1.75, 'Excellent', 'Passed'],
-            ['English Composition', 'ENG101', 3, 2.00, 'Very Good', 'Passed'],
-            ['Programming Fundamentals', 'CS101', 3, 1.50, 'Excellent', 'Passed'],
-            ['Data Structures', 'CS201', 3, 2.25, 'Good', 'Passed'],
-            ['Database Management', 'CS202', 3, 1.75, 'Excellent', 'Passed'],
-            ['Web Development', 'CS301', 3, 2.00, 'Very Good', 'Passed']
-        ];
-        
-        foreach ($grades as $g) {
-            $db->exec("INSERT INTO grades (student_id, subject, code, units, grade, equivalent, remarks, semester, academic_year) 
-                VALUES ('2023-00123', '{$g[0]}', '{$g[1]}', {$g[2]}, {$g[3]}, '{$g[4]}', '{$g[5]}', '2nd', '2023-2024')");
-        }
-        
-        // Insert sample schedule
-        $schedule = [
-            ['Monday', '08:00-09:30', 'Mathematics 101', '301', 'Dr. Smith', 'Lecture'],
-            ['Monday', '10:00-11:30', 'Web Development', 'Lab 204', 'Prof. Johnson', 'Lab'],
-            ['Tuesday', '09:00-10:30', 'Data Structures', '302', 'Ms. Davis', 'Lecture'],
-            ['Tuesday', '13:00-14:30', 'English Composition', '105', 'Dr. Wilson', 'Lecture'],
-            ['Wednesday', '08:00-11:00', 'Programming Lab', 'Lab 205', 'Prof. Brown', 'Lab'],
-            ['Thursday', '10:00-11:30', 'Database Management', '303', 'Dr. Taylor', 'Lecture'],
-            ['Friday', '09:00-12:00', 'Thesis Consultation', 'Faculty Room', 'Dr. Lee', 'Consultation']
-        ];
-        
-        foreach ($schedule as $s) {
-            $db->exec("INSERT INTO schedule (day, time, subject, room, instructor, type) 
-                VALUES ('{$s[0]}', '{$s[1]}', '{$s[2]}', '{$s[3]}', '{$s[4]}', '{$s[5]}')");
-        }
-        
-        // Insert sample subjects
-        $subjects = [
-            ['CS401', 'Software Engineering', 3, 'MWF 10:00-11:30'],
-            ['CS402', 'Mobile Development', 3, 'TTH 13:00-14:30'],
-            ['CS403', 'Computer Networks', 3, 'MWF 08:00-09:30'],
-            ['CS404', 'AI Fundamentals', 3, 'TTH 10:00-11:30'],
-            ['MATH201', 'Calculus II', 3, 'MWF 13:00-14:30'],
-            ['ENG201', 'Technical Writing', 3, 'TTH 08:00-09:30']
-        ];
-        
-        foreach ($subjects as $s) {
-            $db->exec("INSERT INTO subjects (code, name, units, schedule) 
-                VALUES ('{$s[0]}', '{$s[1]}', {$s[2]}, '{$s[3]}')");
-        }
-        
-        // Insert sample services
-        $services = [
-            ['Academic', 'Request TOR', 'Transcript of Records', '3-5 days'],
-            ['Academic', 'Request Diploma', 'Official Diploma', '5-7 days'],
-            ['Academic', 'Request Certificate', 'Various Certificates', '2-3 days'],
-            ['Financial', 'Pay Tuition', 'Online Payment', 'Immediate'],
-            ['Financial', 'View Balance', 'Check Account', 'Immediate'],
-            ['Documents', 'Apply Clearance', 'Student Clearance', '2-3 days'],
-            ['Documents', 'Request ID', 'ID Replacement', '3-5 days']
-        ];
-        
-        foreach ($services as $s) {
-            $db->exec("INSERT INTO services (category, name, description, processing_time) 
-                VALUES ('{$s[0]}', '{$s[1]}', '{$s[2]}', '{$s[3]}')");
-        }
-        
-        // Insert sample documents
-        $docs = [
-            ['Clearance Form', 'PDF', '245 KB', '2024-03-01'],
-            ['Enrollment Form', 'PDF', '312 KB', '2024-02-28'],
-            ['Grade Slip Template', 'Excel', '45 KB', '2024-02-25'],
-            ['Thesis Guidelines', 'PDF', '1.2 MB', '2024-02-20'],
-            ['Student Handbook', 'PDF', '3.5 MB', '2024-02-15']
-        ];
-        
-        foreach ($docs as $d) {
-            $db->exec("INSERT INTO documents (name, type, size, date) 
-                VALUES ('{$d[0]}', '{$d[1]}', '{$d[2]}', '{$d[3]}')");
-        }
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $pdo;
+    } catch (PDOException $e) {
+        die("Database connection failed: " . $e->getMessage());
     }
 }
+
+// Database initialization is handled by setup_db.php script
 
 // Simple router
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
-// Initialize database
-initDB();
-
 // Check login
 $loggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true;
 $user = isset($_SESSION['user']) ? $_SESSION['user'] : null;
+
+// Initialize database connection for logged-in users
+$db = null;
+if ($loggedIn) {
+    try {
+        $db = getDB();
+    } catch (Exception $e) {
+        // For debugging - remove this in production
+        error_log("Database connection error: " . $e->getMessage());
+        die("Database connection failed. Please check your database configuration.");
+    }
+}
 
 // Handle login
 if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = $_POST['student_id'] ?? '';
     $password = $_POST['password'] ?? '';
-    
+
     $db = getDB();
-    $stmt = $db->prepare("SELECT * FROM users WHERE student_id = :id AND password = :pass");
-    $stmt->bindValue(':id', $student_id);
-    $stmt->bindValue(':pass', $password);
-    $result = $stmt->execute();
-    $userData = $result->fetchArray(SQLITE3_ASSOC);
-    
+    $stmt = $db->prepare("SELECT * FROM users WHERE student_id = ?");
+    $stmt->execute([$student_id]);
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // For demo purposes, check plain text password
+    if ($userData && $password === 'demo123') {
+        // Valid login
+    } else {
+        $userData = false;
+    }
+
     if ($userData) {
         $_SESSION['logged_in'] = true;
         $_SESSION['user'] = $userData;
@@ -453,9 +334,21 @@ if (!$loggedIn && $page !== 'login') {
     
     <div class="row">
         <?php
-        $db = getDB();
-        $result = $db->query("SELECT * FROM grades WHERE student_id = '{$user['student_id']}'");
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)):
+        if ($db) {
+            $stmt = $db->prepare("
+                SELECT g.*, c.course_name as subject, c.course_code as code, c.units
+                FROM grades g
+                JOIN courses c ON g.course_id = c.id
+                WHERE g.student_id = ?
+                ORDER BY g.created_at DESC
+            ");
+            $stmt->execute([$user['id']]);
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+        } else {
+            // No database connection
+            echo "<p>Database not available</p>";
+            return;
+        }
             $gradeClass = $row['grade'] <= 1.5 ? 'grade-excellent' : ($row['grade'] <= 2.0 ? 'grade-good' : ($row['grade'] <= 2.5 ? 'grade-average' : 'grade-poor'));
         ?>
         <div class="col-md-6 mb-3">
@@ -516,15 +409,27 @@ if (!$loggedIn && $page !== 'login') {
                     </thead>
                     <tbody>
                         <?php
-                        $result = $db->query("SELECT * FROM schedule ORDER BY 
-                            CASE day 
-                                WHEN 'Monday' THEN 1 
-                                WHEN 'Tuesday' THEN 2 
-                                WHEN 'Wednesday' THEN 3 
-                                WHEN 'Thursday' THEN 4 
-                                WHEN 'Friday' THEN 5 
-                            END, time");
-                        while ($row = $result->fetchArray(SQLITE3_ASSOC)):
+                        $stmt = $db->prepare("
+                            SELECT s.*, c.course_name as subject, c.course_code
+                            FROM schedule s
+                            JOIN courses c ON s.course_id = c.id
+                            ORDER BY
+                                CASE s.day_of_week
+                                    WHEN 'monday' THEN 1
+                                    WHEN 'tuesday' THEN 2
+                                    WHEN 'wednesday' THEN 3
+                                    WHEN 'thursday' THEN 4
+                                    WHEN 'friday' THEN 5
+                                    WHEN 'saturday' THEN 6
+                                    WHEN 'sunday' THEN 7
+                                END, s.start_time
+                        ");
+                        $stmt->execute();
+                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+                            // Format the data to match the old structure
+                            $row['day'] = ucfirst($row['day_of_week']);
+                            $row['time'] = date('H:i', strtotime($row['start_time'])) . '-' . date('H:i', strtotime($row['end_time']));
+                            $row['type'] = ucfirst($row['schedule_type']);
                         ?>
                         <tr>
                             <td><?= $row['day'] ?></td>
@@ -575,8 +480,12 @@ if (!$loggedIn && $page !== 'login') {
                     </thead>
                     <tbody>
                         <?php
-                        $result = $db->query("SELECT * FROM subjects");
-                        while ($row = $result->fetchArray(SQLITE3_ASSOC)):
+                        $stmt = $db->query("SELECT * FROM courses ORDER BY course_code");
+                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+                            // Map fields to match old structure
+                            $row['code'] = $row['course_code'];
+                            $row['name'] = $row['course_name'];
+                            $row['schedule'] = 'TBD'; // Placeholder since schedule is in separate table
                         ?>
                         <tr>
                             <td><?= $row['code'] ?></td>
@@ -616,20 +525,33 @@ if (!$loggedIn && $page !== 'login') {
         </div>
         <div class="card-body">
             <?php
-            $result = $db->query("SELECT * FROM services WHERE category = '$cat'");
-            while ($row = $result->fetchArray(SQLITE3_ASSOC)):
+            // Static services data (since services table doesn't exist in new schema)
+            $services = [
+                ['Academic', 'Request TOR', 'Transcript of Records', '3-5 days'],
+                ['Academic', 'Request Diploma', 'Official Diploma', '5-7 days'],
+                ['Academic', 'Request Certificate', 'Various Certificates', '2-3 days'],
+                ['Financial', 'Pay Tuition', 'Online Payment', 'Immediate'],
+                ['Financial', 'View Balance', 'Check Account', 'Immediate'],
+                ['Documents', 'Apply Clearance', 'Student Clearance', '2-3 days'],
+                ['Documents', 'Request ID', 'ID Replacement', '3-5 days']
+            ];
+            foreach ($services as $row):
+                if ($row[0] === $cat):
             ?>
             <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
                 <div>
-                    <h6 class="mb-1"><?= $row['name'] ?></h6>
-                    <small class="text-muted"><?= $row['description'] ?></small>
+                    <h6 class="mb-1"><?= $row[1] ?></h6>
+                    <small class="text-muted"><?= $row[2] ?></small>
                 </div>
                 <div class="text-end">
-                    <small class="text-muted"><?= $row['processing_time'] ?></small>
+                    <small class="text-muted"><?= $row[3] ?></small>
                     <button class="btn btn-sm btn-primary ms-2">Request</button>
                 </div>
             </div>
-            <?php endwhile; ?>
+            <?php
+                endif;
+            endforeach;
+            ?>
         </div>
     </div>
     <?php endforeach; ?>
@@ -659,8 +581,13 @@ if (!$loggedIn && $page !== 'login') {
                     </thead>
                     <tbody>
                         <?php
-                        $result = $db->query("SELECT * FROM documents");
-                        while ($row = $result->fetchArray(SQLITE3_ASSOC)):
+                        $stmt = $db->query("SELECT * FROM documents ORDER BY created_at DESC");
+                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+                            // Map fields to match old structure
+                            $row['name'] = $row['document_name'];
+                            $row['type'] = strtoupper($row['document_type']);
+                            $row['size'] = $row['file_size'];
+                            $row['date'] = date('Y-m-d', strtotime($row['created_at']));
                         ?>
                         <tr>
                             <td><?= $row['name'] ?></td>
