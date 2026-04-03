@@ -162,8 +162,7 @@ if (!$loggedIn && $page !== 'login') {
                         <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
                     </form>
                     <div class="mt-4 p-3 bg-light rounded">
-                        <small><strong>Student Demo:</strong> ID: 2023-00123 | Password: demo123<br>
-                        <strong>Teacher Demo:</strong> Username: admin | Password: admin123</small>
+                        <small><strong>Demo Credentials:</strong> ID: 2023-00123 | Password: demo123</small>
                     </div>
                 </div>
             </div>
